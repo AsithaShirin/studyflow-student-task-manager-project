@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -9,8 +11,10 @@ import taskRoutes from './routes/taskRoutes.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 export const app = express();
+const clientDistPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');
 const allowedOrigins = new Set([
   env.CLIENT_URL,
+  env.RENDER_EXTERNAL_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ]);
@@ -33,5 +37,16 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false });
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use(express.static(clientDistPath));
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api/')) {
+    next();
+    return;
+  }
+
+  res.sendFile(path.join(clientDistPath, 'index.html'), error => {
+    if (error) next(error);
+  });
+});
 app.use(notFound);
 app.use(errorHandler);
