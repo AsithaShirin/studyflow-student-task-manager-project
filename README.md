@@ -174,9 +174,17 @@ git push -u origin main
 
 Save future work in small commits, such as `Add task completion filter`, then run `git push`. Add the repository URL to this README before submitting.
 
-## Deployment checklist
+## Deploy publicly on Render
 
-This project is set up for local learning. Before deployment, configure production environment variables, allow only the deployed frontend origin, use HTTPS, enable secure cookies, restrict database access, and verify that no request points to localhost. Check sign-up, sign-in, ownership, refresh, and core task actions on the live site. Hosting limits and prices change, so check the provider's current documentation before choosing a host.
+The `render.yaml` Blueprint deploys the React client and Express API as one web service. The browser uses the same-origin `/api` path in production; Vite proxies that path to the local API during development.
+
+1. Create a MongoDB Atlas database. Add a database user and allow network access from Render (Atlas `0.0.0.0/0` is the simple Render-compatible option; use a stronger network restriction if your hosting plan supports stable outbound IPs). Copy the application's connection string and replace its password placeholder.
+2. In Render, choose **New → Blueprint**, connect this GitHub repository, and select the branch containing `render.yaml`.
+3. When prompted for `MONGODB_URI`, paste the Atlas connection string directly into Render's private environment-value field. Do not commit it or send it in chat. Render generates `JWT_SECRET` and sets production mode from the Blueprint.
+4. Apply the Blueprint and wait for the service health check to pass. Open the `onrender.com` URL shown by Render.
+5. Test account registration, sign-in, creating and refreshing tasks, sign-out, and a second account. Use only sample data while testing.
+
+The service uses HTTPS secure HTTP-only cookies in production. Its health endpoint is `/api/health`. Keep database credentials private, use a strong unique Atlas database password, and review current Atlas and Render pricing/network-access documentation before deployment.
 
 ## Known limits and future ideas
 
@@ -207,4 +215,3 @@ This project is set up for local learning. Before deployment, configure producti
 ## Companion report
 
 The project planning report is included in docs/Student_Task_Manager_MERN_Project_Report.docx. Update the report and this README with your own implementation evidence before submission.
-
